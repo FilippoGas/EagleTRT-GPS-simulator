@@ -1,32 +1,27 @@
 #!/bin/bash
 
+# Adding killing trap
 function ctrl_c() {
-        echo "in kill"
-        kill $GPSID
-        kill $CANID
-
-        #wait $GPSID
+        echo "killing processes"
+        kill $GPS_ID
+        kill $CAN_ID
 }
 trap ctrl_c SIGINT
 
-
-./simulator.out &
-GPSID=$!
-
+# Starting canplayer
+echo "starting can process"
 bash ./can.sh &
-CANID=$! 
+CAN_ID=$! 
 
-echo "can" $CANID
-echo "gps" $GPSID
+# Starting gps simulator
+echo "starting gps process"
+./simulator.out &
+GPS_ID=$!
 
-# trap ctrl-c and call ctrl_c()
+# Printing 
+echo "CAN_ID" $CAN_ID
+echo "GPS_ID" $GPS_ID
 
-#Swait $CANID
-#wait $GPSID
-
-#Strap ctrl_c TERM INT
-
-wait $CANID
-wait $GPSID
-
-exit 0
+# Waiting for trap
+wait $CAN_ID
+wait $GPS_ID
