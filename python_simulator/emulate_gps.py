@@ -18,6 +18,7 @@ def parse_message(line):
     words = line.split(',')
     # To simulate switch in python
     switcher = {
+        # TODO: Add all gps messages, it crashes if there is an unknown message type
         "$GNGGA": get_gga_message_timestamp,
         "$GNGLL": get_gll_message_timestamp,
         "$GNRMC": get_rmc_message_timestamp,
@@ -35,6 +36,7 @@ def parse_message(line):
 
 # Returns all the messages from the lines
 def get_messages(lines):
+    # TODO: filter empty lines, otherwise it crushes
     return list(map(parse_message, lines))
 
 # Returns the messages with the timestamp modfied: it will contain the number of milliseconds passed from the last message
@@ -60,7 +62,7 @@ def emulate(messages):
     for m in messages:
         # Sleep for milliseconds
         sleep(m.get("timestamp") / 1000)
-        # Print the message
+        # TODO: Print on serial port
         print(m.get("raw"))
 
 # The main procedure
@@ -69,7 +71,8 @@ def main():
     lines = get_lines(log_text)
     messages = get_messages(lines)
     parse_timestamps(messages)
-    emulate(messages)
+    while True:
+        emulate(messages)
     
 # Executes the main procedure
 main()
