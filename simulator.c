@@ -1,22 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
-#include "./gps_service/gps_service.h"
-
-// Let this shit to use asprintf
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 1
-#endif
-
-void printMessage(char* message);
-void printError(char* message);
+#include "gps_service.h"
 
 int getDelta(int* previousT, int* currentT, char* line);
 
 int main(int argc, char const *argv[])
 {
-    usleep(1000 * 1000);
-
     int previousT = 0, currentT = 0, deltaT = 0;
     //get the master id
     int gps_port = openGPSPort("/dev/ptmx");
@@ -25,14 +14,14 @@ int main(int argc, char const *argv[])
     // grant access to the slave
     if(grantpt(gps_port) < 0)
     {
-        printError("grantpt");
+        perror("grantpt");
         exit(1);
     }
 
     // unlock the slave
     if(unlockpt(gps_port) < 0)
     {
-        printError("unlockpt");
+        perror("unlockpt");
         exit(1);
     }
 
@@ -40,32 +29,21 @@ int main(int argc, char const *argv[])
     char slavepath[64];
     if(ptsname_r(gps_port, slavepath, sizeof(slavepath)) < 0)
     {
-        printError("ptsname_r");
+        perror("ptsname_r");
         exit(1);
     }
 
-    char* gpsInterfaceMessage;
-    asprintf(&gpsInterfaceMessage, "GPS INTERFACE: %s", slavepath);
-    printMessage(gpsInterfaceMessage);
-    free(gpsInterfaceMessage);
+    printf("Using %s\n", slavepath);
     
     
     while(1){
         char* line = NULL;
         size_t len = 0;
 
-        FILE* fp;
-        char* ubxSource = (argc > 1) ? argv[1] : "gps.txt"; // TODO: ....
-        fp = fopen(ubxSource, "r");
-
-        char* ubxSourceMessage;
-        asprintf(&ubxSourceMessage, "UBX SOURCE: %s", ubxSource);
-        printMessage(ubxSourceMessage);
-        free(ubxSourceMessage);
-        
+        FILE* fp = fopen("gps.txt","r");
         if (fp == NULL)
         {
-            printError("Error opening file!\n");
+            perror("Error opening file!\n");
             exit(1);
         }
         int t = 0;
@@ -119,14 +97,4 @@ int getDelta(int* previousT, int* currentT, char* line){
         free(rmc);
         return currentT - previousT; 
     }
-}
-
-void printMessage(char* message) {
-    printf("[GPS] {MESSAGE} %s\n", message);
-    fflush(stdout);
-}
-
-void printError(char* message) {
-    printf("[GPS] {ERROR} %s\n", message);
-    fflush(stderr);
 }
